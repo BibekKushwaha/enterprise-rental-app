@@ -7,6 +7,7 @@ import morgan from "morgan";
 import { authMiddleware } from "./middleware/auth.middleware.ts";
 import tenantRoutes from "./routes/routes.tenant.ts";
 import managerRoutes from "./routes/routes.manager.ts";
+import propertyRoutes from "./routes/routes.property.ts"
 
 // import { PrismaClient } from "@prisma/client";
 
@@ -30,7 +31,7 @@ app.get("/", (req, res) => {
     res.send("Hello from server");12
 });
 
-
+app.use("/properties",propertyRoutes);
 app.use("/tenants", authMiddleware(["tenant"]),tenantRoutes);
 app.use("/managers", authMiddleware(["manager"]),managerRoutes);
 
