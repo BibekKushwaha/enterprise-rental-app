@@ -7,11 +7,10 @@ import morgan from "morgan";
 import { authMiddleware } from "./middleware/auth.middleware.ts";
 import tenantRoutes from "./routes/routes.tenant.ts";
 import managerRoutes from "./routes/routes.manager.ts";
-import propertyRoutes from "./routes/routes.property.ts"
+import propertyRoutes from "./routes/routes.property.ts";
+import leaseRoutes from "./routes/routes.lease.ts";
+import applicationRoutes from "./routes/routes.application.ts";
 
-// import { PrismaClient } from "@prisma/client";
-
-// const prisma = new PrismaClient();
 
 
 // Configurations
@@ -34,23 +33,12 @@ app.get("/", (req, res) => {
 app.use("/properties",propertyRoutes);
 app.use("/tenants", authMiddleware(["tenant"]),tenantRoutes);
 app.use("/managers", authMiddleware(["manager"]),managerRoutes);
+app.use("/leases",leaseRoutes);
+app.use("/applications",applicationRoutes);
 
 // Server
 const PORT = process.env.PORT || 6001;
 app.listen(PORT, () => console.log(`Server runing Port: ${PORT}`));
 
 
-// async function getAllTenants(cognitoId: string) {
-//   try {
-//     const managers = await prisma.manager.findUnique({
-//       where: { cognitoId },
-//     });
-//     console.log(managers);
-//   } catch (error) {
-//     console.error("Error fetching tenants:", error);
-//   } finally {
-//     await prisma.$disconnect();
-//   }
-// }
 
-// getAllTenants("us-east-2:90123456-90ab-cdef-1234-567890abcdef");

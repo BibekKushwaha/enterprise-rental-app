@@ -118,6 +118,6 @@ export const getManagerProperties = async (
   } catch (err: any) {
     res
       .status(500)
-      .json({ message: `Error retrieving property: ${err.message}` });
+      .json({ message: `Error retrieving Manager property: ${err.message}` });
   }
 };
