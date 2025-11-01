@@ -1,6 +1,6 @@
 import express from "express";
 import { authMiddleware } from "../middleware/auth.middleware.js";
-import { getLeasePayments, getLeases } from "../controller/lease.controllers.js";
+import { getLeasePayments, getLeases } from "../controller/lease.controller.js";
 
 
 

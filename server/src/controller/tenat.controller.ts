@@ -17,7 +17,7 @@ export const getTanent =  async (req:Request,res:Response) =>{
         favorites: true,
       }
     });
-    console.log(tenant);
+    // console.log(tenant);
     if(tenant){
         res.json(tenant);
     }else{

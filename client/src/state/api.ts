@@ -1,8 +1,8 @@
-import { createNewUserInDatabase } from "@/lib/create-new-user";
-import { Manager, Tenant } from "@/types/prismaType";
+import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/create-new-user";
+import { Manager, Property, Tenant } from "@/types/prismaType";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
-import { string } from "zod";
+import { FiltersState } from ".";
 
 // Define the User type with proper userRole
 interface User {
@@ -39,7 +39,7 @@ export const api = createApi({
     }
   }),
   reducerPath: "api",
-  tagTypes: ["Tenants","Managers"],
+  tagTypes: ["Tenants","Managers","Properties","PropertyDetails"],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
       queryFn: async (_, _queryApi, _extraOptions, fetchWithBQ) => {
@@ -70,7 +70,7 @@ export const api = createApi({
           const endpoint = userRole === "manager" ? `/managers/${userId}` : `/tenants/${userId}`;
           
           let userDetailsResponse = await fetchWithBQ(endpoint);
-          console.log(userDetailsResponse);
+          // console.log(userDetailsResponse);
 
           if (userDetailsResponse.error && userDetailsResponse.error.status === 404) {
             userDetailsResponse = await createNewUserInDatabase(
@@ -123,8 +123,118 @@ export const api = createApi({
       body: updatedManager,
     }),
     invalidatesTags: (result) =>[{type:"Managers", id: result?.id}],
-    })
+    }),
+    // property related query
+     getProperties: build.query<
+      Property[],
+      Partial<FiltersState> & { favoriteIds?: number[] }
+    >({
+      query: (filters) => {
+        const params = cleanParams({
+          location: filters.location,
+          priceMin: filters.priceRange?.[0],
+          priceMax: filters.priceRange?.[1],
+          beds: filters.beds,
+          baths: filters.baths,
+          propertyType: filters.propertyType,
+          squareFeetMin: filters.squareFeet?.[0],
+          squareFeetMax: filters.squareFeet?.[1],
+          amenities: Array.isArray(filters.amenities)
+            ? filters.amenities.join(",")
+            : filters.amenities || "",
+          availableFrom: filters.availableFrom,
+          favoriteIds: Array.isArray(filters.favoriteIds)
+            ? filters.favoriteIds.join(",")
+            : filters.favoriteIds || "",
+          latitude: filters.coordinates?.[1],
+          longitude: filters.coordinates?.[0],
+        });
+
+        return { url: "properties", params };
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: "Properties" as const, id })),
+              { type: "Properties", id: "LIST" },
+            ]
+          : [{ type: "Properties", id: "LIST" }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to fetch properties.",
+        });
+      },
+    }),
+
+    getProperty: build.query<Property, number>({
+      query: (id) => `properties/${id}`,
+      providesTags: (result, error, id) => [{ type: "PropertyDetails", id }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load property details.",
+        });
+      },
+    }),
+    // tenant related endpoint
+
+    getTenant: build.query<Tenant, string>({
+      query: (cognitoId) => `tenants/${cognitoId}`,
+      providesTags: (result) => [{ type: "Tenants", id: result?.id }],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          error: "Failed to load tenant profile.",
+        });
+      },
+    }),
+    addFavoriteProperty: build.mutation<
+      Tenant,
+      { cognitoId: string; propertyId: number }
+    >({
+      query: ({ cognitoId, propertyId }) => ({
+        url: `tenants/${cognitoId}/favorites/${propertyId}`,
+        method: "POST",
+      }),
+      invalidatesTags: (result) => [
+        { type: "Tenants", id: result?.id },
+        { type: "Properties", id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Added to favorites!!",
+          error: "Failed to add to favorites",
+        });
+      },
+    }),
+
+    removeFavoriteProperty: build.mutation<
+      Tenant,
+      { cognitoId: string; propertyId: number }
+    >({
+      query: ({ cognitoId, propertyId }) => ({
+        url: `tenants/${cognitoId}/favorites/${propertyId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (result) => [
+        { type: "Tenants", id: result?.id },
+        { type: "Properties", id: "LIST" },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Removed from favorites!",
+          error: "Failed to remove from favorites.",
+        });
+      },
+    }),
   }),
 });
 
-export const { useGetAuthUserQuery, useUpdateTenantSettingMutation, useUpdateManagerSettingMutation} = api;
+export const { 
+  useGetAuthUserQuery,
+  useUpdateTenantSettingMutation, 
+  useUpdateManagerSettingMutation,
+  useGetPropertiesQuery,
+  useAddFavoritePropertyMutation,
+  useRemoveFavoritePropertyMutation,
+  useGetTenantQuery,
+  useGetPropertyQuery,
+} = api;

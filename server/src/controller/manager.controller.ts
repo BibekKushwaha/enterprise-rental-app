@@ -14,7 +14,7 @@ export const getManager =  async (req:Request,res:Response) =>{
     const manager = await prisma.manager.findUnique({
       where: { cognitoId },
     });
-    console.log(manager);
+    // console.log(manager);
     if(manager){
         res.json(manager);
     }else{

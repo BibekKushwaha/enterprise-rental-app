@@ -8,7 +8,7 @@ const storage = multer.memoryStorage();
 const upload = multer({storage:storage});
 
 router.get("/",getProperties);
-router.get("/id",getProperty);
+router.get("/:id",getProperty);
 
 router.post("/",authMiddleware(["manager"]),upload.array("photos") ,createProperty);
 
