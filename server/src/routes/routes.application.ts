@@ -6,7 +6,7 @@ import { createApplication, listApplications, updateApplicationStatus } from "..
 
 const router = express.Router();
 
-router.get("/",authMiddleware(["tenant"]),createApplication);
+router.post("/",authMiddleware(["tenant"]),createApplication);
 router.get("/:id/status",authMiddleware(["manager"]),updateApplicationStatus);
 router.get("/",authMiddleware(["manager","tenant"]),listApplications);
 

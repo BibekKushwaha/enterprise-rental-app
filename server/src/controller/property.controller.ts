@@ -214,10 +214,14 @@ export const createProperty = async (
     //   })
     // );
 
+    // console.log({ address, city, state, country, postalCode });
+
+
     const geocodingUrl = `https://nominatim.openstreetmap.org/search?${new URLSearchParams(
       {
         street: address,
         city,
+        state,
         country,
         postalcode: postalCode,
         format: "json",
@@ -226,9 +230,16 @@ export const createProperty = async (
     ).toString()}`;
     const geocodingResponse = await axios.get(geocodingUrl, {
       headers: {
-        "User-Agent": "RealEstateApp (justsomedummyemail@gmail.com",
+        "User-Agent": "RealEstateApp/1.0 (justsomedummyemail@gmail.com)",
       },
     });
+
+    console.log("Geocoding response:", geocodingResponse.data);
+
+    if (!geocodingResponse.data.length) {
+      throw new Error("Geocoding failed: No location found");
+    }
+
     const [longitude, latitude] =
       geocodingResponse.data[0]?.lon && geocodingResponse.data[0]?.lat
         ? [
@@ -236,6 +247,10 @@ export const createProperty = async (
             parseFloat(geocodingResponse.data[0]?.lat),
           ]
         : [0, 0];
+    
+    console.log("longitude ",longitude);
+    console.log("latitude ",latitude);
+    
 
     // create location
     const [location] = await prisma.$queryRaw<Location[]>`
@@ -282,5 +297,30 @@ export const createProperty = async (
     res
       .status(500)
       .json({ message: `Error creating property: ${err.message}` });
+  }
+};
+
+export const getPropertyLeases = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const propertyId = Number(req.params.id);
+
+    const leases = await prisma.lease.findMany({
+      where: {
+        propertyId,
+      },
+      include: {
+        tenant: true,
+        payments: true,
+      },
+    });
+
+    res.json(leases);
+  } catch (error: any) {
+    res.status(500).json({
+      message: `Error retrieving property leases: ${error.message}`,
+    });
   }
 };

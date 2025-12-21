@@ -70,19 +70,22 @@ const NewProperty = () => {
 
     // Convert form fields for API
     Object.entries(data).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+
       if (key === "photoUrls") {
-        const files = value as File[];
-        files.forEach((file) => formData.append("photos", file));
-      } else if(Array.isArray(value)){
-        formData.append(key,JSON.stringify(value));
-      }
-      else {
+        (value as File[]).forEach((file) =>
+          formData.append("photos", file)
+        );
+      } else if (Array.isArray(value)) {
+        value.forEach((v) => formData.append(key, String(v)));
+      } else {
         formData.append(key, String(value));
       }
     });
 
-    formData.append("managerCognitoId", authUser.cognitoInfo.userId);
 
+    formData.append("managerCognitoId", authUser.cognitoInfo.userId);
+    
     await createProperty(formData);
   };
 

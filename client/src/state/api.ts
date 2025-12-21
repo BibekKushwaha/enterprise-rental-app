@@ -1,5 +1,5 @@
 import { cleanParams, createNewUserInDatabase, withToast } from "@/lib/create-new-user";
-import { Lease, Manager, Payment, Property, Tenant } from "@/types/prismaType";
+import { Application, Lease, Manager, Payment, Property, Tenant } from "@/types/prismaType";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { fetchAuthSession, getCurrentUser, fetchUserAttributes } from "aws-amplify/auth";
 import { FiltersState } from ".";
@@ -39,7 +39,7 @@ export const api = createApi({
     }
   }),
   reducerPath: "api",
-  tagTypes: ["Tenants","Managers","Properties","PropertyDetails","Leases","Payments"],
+  tagTypes: ["Tenants","Managers","Properties","PropertyDetails","Leases","Payments","Applications"],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
       queryFn: async (_, _queryApi, _extraOptions, fetchWithBQ) => {
@@ -175,6 +175,27 @@ export const api = createApi({
         });
       },
     }),
+
+    createProperty: build.mutation<Property, FormData>({
+      query: (newProperty) => ({
+        url: `properties`,
+        method: "POST",
+        body: newProperty,
+      }),
+      invalidatesTags: (result) => [
+        { type: "Properties", id: "LIST" },
+        { type: "Managers", id: result?.manager?.id },
+      ],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Property created successfully!",
+          error: "Failed to create property.",
+        });
+      },
+    }),
+
+
+    
     // tenant related endpoint
 
     getTenant: build.query<Tenant, string>({
@@ -306,24 +327,63 @@ export const api = createApi({
       },
     }),
 
-    createProperty: build.mutation<Property, FormData>({
-      query: (newProperty) => ({
-        url: `properties`,
-        method: "POST",
-        body: newProperty,
-      }),
-      invalidatesTags: (result) => [
-        { type: "Properties", id: "LIST" },
-        { type: "Managers", id: result?.manager?.id },
-      ],
+    
+
+    // application related endpoints
+    getApplications: build.query<
+      Application[],
+      { userId?: string; userType?: string }
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params.userId) {
+          queryParams.append("userId", params.userId.toString());
+        }
+        if (params.userType) {
+          queryParams.append("userType", params.userType);
+        }
+
+        return `applications?${queryParams.toString()}`;
+      },
+      providesTags: ["Applications"],
       async onQueryStarted(_, { queryFulfilled }) {
         await withToast(queryFulfilled, {
-          success: "Property created successfully!",
-          error: "Failed to create property.",
+          error: "Failed to fetch applications.",
         });
       },
     }),
 
+    updateApplicationStatus: build.mutation<
+      Application & { lease?: Lease },
+      { id: number; status: string }
+    >({
+      query: ({ id, status }) => ({
+        url: `applications/${id}/status`,
+        method: "PUT",
+        body: { status },
+      }),
+      invalidatesTags: ["Applications", "Leases"],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Application status updated successfully!",
+          error: "Failed to update application settings.",
+        });
+      },
+    }),
+     createApplication: build.mutation<Application, Partial<Application>>({
+      query: (body) => ({
+        url: `applications`,
+        method: "POST",
+        body: body,
+      }),
+      invalidatesTags: ["Applications"],
+      async onQueryStarted(_, { queryFulfilled }) {
+        await withToast(queryFulfilled, {
+          success: "Application created successfully!",
+          error: "Failed to create applications.",
+        });
+      },
+    }),
   }),
 });
 
@@ -343,4 +403,7 @@ export const {
   useGetPropertyLeasesQuery,
   useCreatePropertyMutation,
   useUpdateManagerSettingsMutation,
+  useGetApplicationsQuery,
+  useUpdateApplicationStatusMutation,
+  useCreateApplicationMutation,
 } = api;
