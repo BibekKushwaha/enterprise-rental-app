@@ -37,8 +37,8 @@ app.use("/leases",leaseRoutes);
 app.use("/applications",applicationRoutes);
 
 // Server
-const PORT = process.env.PORT || 6001;
-app.listen(PORT, () => console.log(`Server runing Port: ${PORT}`));
+const PORT = Number(process.env.PORT) || 6001;
+app.listen(PORT, "0.0.0.0", () => console.log(`Server runing Port: ${PORT}`));
 
 
 
