@@ -6,6 +6,8 @@
 - npm or yarn
 - PostgreSQL database (local or cloud)
 
+
+
 ## Installation
 
 1. **Clone the repository**
