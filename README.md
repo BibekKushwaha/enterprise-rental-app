@@ -6,8 +6,6 @@
 - npm or yarn
 - PostgreSQL database (local or cloud)
 
-
-
 ## Installation
 
 1. **Clone the repository**
@@ -47,6 +45,49 @@
    ```bash
    npm run seed
    ```
+
+## Docker Installation (Recommended)
+
+Docker provides an easier way to run the entire application with all dependencies.
+
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+
+### Quick Start with Docker
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd real-estate
+   ```
+
+2. **Start all services**
+   ```bash
+   docker-compose up --build
+   ```
+
+   Or run in background:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+3. **Seed the database (optional)**
+   ```bash
+   docker-compose exec server npm run seed
+   ```
+
+The application will be available at:
+- Client: http://localhost:3000
+- Server: http://localhost:8000
+- Database: localhost:5432
+
+### Docker Commands
+
+- **Stop services**: `docker-compose down`
+- **View logs**: `docker-compose logs -f [service-name]`
+- **Rebuild**: `docker-compose up --build --force-recreate`
+- **Clean up**: `docker-compose down -v` (removes volumes)
 
 ## Running the Application
 

@@ -2,13 +2,14 @@ import type { NextConfig } from "next";
 /** @type {import('next').NextConfig} */
 const nextConfig: NextConfig = {
   /* config options here */
-  images:{
-    remotePatterns:[
+  output: 'standalone',
+  images: {
+    remotePatterns: [
       {
-        protocol:"https",
+        protocol: "https",
         hostname: "example.com",
-        port:"",
-        pathname:"/**",
+        port: "",
+        pathname: "/**",
       }
     ]
   }
