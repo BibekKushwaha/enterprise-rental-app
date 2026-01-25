@@ -1,5 +1,5 @@
 import express from "express";
-import { addFavoriteProperty, createTanent, getCurrentResidence, getTanent ,removeFavoriteProperty,updateTanent} from "../controller/tenat.controller.ts";
+import { addFavoriteProperty, createTanent, getCurrentResidence, getTanent ,removeFavoriteProperty,updateTanent} from "../controller/tenat.controller.js";
 
 const router = express.Router();
 

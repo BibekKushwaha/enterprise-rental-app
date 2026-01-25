@@ -1,5 +1,5 @@
 import express from "express";
-import { createManager, getManager,getManagerProperties,updateManager } from "../controller/manager.controller.ts";
+import { createManager, getManager,getManagerProperties,updateManager } from "../controller/manager.controller.js";
 
 const router = express.Router();
 
