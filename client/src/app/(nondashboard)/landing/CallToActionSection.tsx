@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 const CallToActionSection = () => {
   return (
-    <div className='relative py-24'>
+    <div className='relative py-24 mt-16'>
         <Image
         src="/landing-call-to-action.jpg"
         alt='Call to action background'

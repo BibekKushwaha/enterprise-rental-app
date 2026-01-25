@@ -27,7 +27,7 @@ app.use(cors());
 
 // Routes
 app.get("/", (req, res) => {
-    res.send("Hello from server");12
+    res.send("Hello from server");
 });
 
 app.use("/properties",propertyRoutes);

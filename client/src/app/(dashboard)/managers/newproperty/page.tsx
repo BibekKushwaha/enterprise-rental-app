@@ -44,8 +44,8 @@ const NewProperty = () => {
       isPetsAllowed: true,
       isParkingIncluded: true,
       photoUrls: [],
-      amenities: "",
-      highlights: "",
+      amenities: [],
+      highlights: [],
       beds: "1",
       baths: "1",
       squareFeet: "1000",
@@ -73,11 +73,16 @@ const NewProperty = () => {
       if (value === undefined || value === null) return;
 
       if (key === "photoUrls") {
+        // Append each file separately with the "photos" key
         (value as File[]).forEach((file) =>
           formData.append("photos", file)
         );
+      } else if (key === "amenities" || key === "highlights") {
+        // Backend expects comma-separated string for amenities and highlights
+        formData.append(key, (value as string[]).join(","));
       } else if (Array.isArray(value)) {
-        value.forEach((v) => formData.append(key, String(v)));
+        // Handle other arrays
+        formData.append(key, value.join(","));
       } else {
         formData.append(key, String(value));
       }
@@ -185,7 +190,7 @@ const NewProperty = () => {
             <CustomFormField
               name="amenities"
               label="Amenities"
-              type="select"
+              type="multiselect"
               options={Object.values(AmenityEnum).map((v) => ({
                 value: v,
                 label: v,
@@ -195,7 +200,7 @@ const NewProperty = () => {
             <CustomFormField
               name="highlights"
               label="Highlights"
-              type="select"
+              type="multiselect"
               options={Object.values(HighlightEnum).map((v) => ({
                 value: v,
                 label: v,

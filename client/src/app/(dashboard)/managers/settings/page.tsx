@@ -2,14 +2,14 @@
 import { useGetAuthUserQuery, useUpdateManagerSettingMutation } from '@/state/api';
 import React from 'react';
 import SettingForm from '@/components/SettingsForm';
+import Loading from '@/components/Loading';
 
 const ManagerSettings = () => {
     const {data:authUser,isLoading} = useGetAuthUserQuery();
-    console.log("authUser",authUser);
     const [updateManager] = useUpdateManagerSettingMutation();
 
     if(isLoading){
-        return <>Loading..</>
+        return <Loading />;
     }
 
     const initialData = {

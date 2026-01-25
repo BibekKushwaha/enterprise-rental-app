@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import AppSidebar from "@/components/AppSidebar";
 import { useGetAuthUserQuery } from "@/state/api";
 import { usePathname, useRouter } from "next/navigation";
+import Loading from "@/components/Loading";
 
 
 
@@ -23,7 +24,7 @@ const DashboardLayout = ({children}:{children:React.ReactNode})=>{
                 (userRole === "tenant" && pathname.startsWith("/managers"))
             ){
                 router.push(
-                    userRole === "manager" ? "/manager/properties" : "/tenants/favorites",
+                    userRole === "manager" ? "/managers/properties" : "/tenants/favorites",
                     {scroll:false}
                 )
             }else{
@@ -31,7 +32,7 @@ const DashboardLayout = ({children}:{children:React.ReactNode})=>{
             }
         }
     },[authUser, router, pathname]);
-    if(authLoading || isLoading) return <>Loading..</>
+    if(authLoading || isLoading) return <Loading />;
     if(!authUser?.userRole)return null;
     return (<SidebarProvider>
         <div className="min-h-screen w-full bg-primary-100">

@@ -87,6 +87,32 @@ body {
   padding-right: 2rem;
 }
 
+/* Map container styles */
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Search location marker styles */
+.search-location-marker {
+  cursor: pointer;
+  z-index: 10;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+}
+
+.search-location-marker:hover {
+  transform: scale(1.1);
+}
+
+.search-popup {
+  padding: 4px;
+  text-align: center;
+}
+
 /* Mapbox styles - FIXED: Added proper CSS selectors */
 .mapboxgl-popup-content {
   background: hsl(0 0% 15.7%) !important; /* primary-700 equivalent */

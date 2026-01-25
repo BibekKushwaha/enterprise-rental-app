@@ -1,7 +1,7 @@
 import { FiltersState, setFilters, setViewMode, toggleFiltersFullOpen } from '@/state';
 import { useAppSelector } from '@/state/redux';
 import { usePathname, useRouter } from 'next/navigation';
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useDispatch } from 'react-redux';
 import {debounce} from "lodash";
 import { cleanParams, formatPriceValue } from '@/lib/create-new-user';
@@ -23,7 +23,22 @@ const FiltersBar = () => {
   const viewMode = useAppSelector((state) => state.global.viewMode);
   const [searchInput, setSearchInput] = useState(filters.location);
 
-  const updateURL = debounce((newFilters: FiltersState) => {
+  // Use refs for router and pathname to avoid recreating debounce
+  const routerRef = useRef(router);
+  const pathnameRef = useRef(pathname);
+  
+  useEffect(() => {
+    routerRef.current = router;
+    pathnameRef.current = pathname;
+  }, [router, pathname]);
+
+  // Sync searchInput when filters.location changes from external sources
+  useEffect(() => {
+    setSearchInput(filters.location);
+  }, [filters.location]);
+
+  // Stable debounced function using useMemo
+  const updateURL = useMemo(() => debounce((newFilters: FiltersState) => {
     const cleanFilters = cleanParams(newFilters);
     const updatedSearchParams = new URLSearchParams();
 
@@ -34,8 +49,15 @@ const FiltersBar = () => {
       );
     });
 
-    router.push(`${pathname}?${updatedSearchParams.toString()}`);
-  });
+    routerRef.current.push(`${pathnameRef.current}?${updatedSearchParams.toString()}`);
+  }, 300), []);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      updateURL.cancel();
+    };
+  }, [updateURL]);
 
    const handleFilterChange = (
     key: string,
@@ -74,21 +96,22 @@ const FiltersBar = () => {
       const data = await response.json();
       if (data.features && data.features.length > 0) {
         const [lng, lat] = data.features[0].center;
-        dispatch(
-          setFilters({
-            location: searchInput,
-            coordinates: [lng, lat],
-          })
-        );
+        const newFilters = {
+          ...filters,
+          location: searchInput,
+          coordinates: [lng, lat] as [number, number],
+        };
+        dispatch(setFilters(newFilters));
+        updateURL(newFilters);
       }
     } catch (err) {
       console.error("Error search location:", err);
     }
   };
   return (
-    <div className="flex justify-between items-center w-full py-5">
+    <div className="flex flex-wrap justify-between items-center w-full py-3 md:py-5 gap-2">
       {/* Filters */}
-      <div className="flex justify-between items-center gap-4 p-2">
+      <div className="flex flex-wrap items-center gap-2 md:gap-4 p-1 md:p-2">
         {/* All Filters */}
         <Button
           variant="outline"
@@ -99,7 +122,7 @@ const FiltersBar = () => {
           onClick={() => dispatch(toggleFiltersFullOpen())}
         >
           <Filter className="w-4 h-4" />
-          <span>All Filters</span>
+          <span className="hidden sm:inline">All Filters</span>
         </Button>
 
         {/* Search Location */}
@@ -108,7 +131,7 @@ const FiltersBar = () => {
             placeholder="Search location"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-40 rounded-l-xl rounded-r-none border-primary-400 border-r-0"
+            className="w-28 sm:w-40 rounded-l-xl rounded-r-none border-primary-400 border-r-0"
           />
           <Button
             onClick={handleLocationSearch}
@@ -119,8 +142,8 @@ const FiltersBar = () => {
           </Button>
         </div>
 
-        {/* Price Range */}
-        <div className="flex gap-1">
+        {/* Price Range - Hidden on mobile */}
+        <div className="hidden md:flex gap-1">
           {/* Minimum Price Selector */}
           <Select
             value={filters.priceRange[0]?.toString() || "any"}
@@ -166,8 +189,8 @@ const FiltersBar = () => {
           </Select>
         </div>
 
-        {/* Beds and Baths */}
-        <div className="flex gap-1">
+        {/* Beds and Baths - Hidden on mobile */}
+        <div className="hidden lg:flex gap-1">
           {/* Beds */}
           <Select
             value={filters.beds}
@@ -202,14 +225,14 @@ const FiltersBar = () => {
           </Select>
         </div>
 
-        {/* Property Type */}
+        {/* Property Type - Hidden on mobile */}
         <Select
           value={filters.propertyType || "any"}
           onValueChange={(value) =>
             handleFilterChange("propertyType", value, null)
           }
         >
-          <SelectTrigger className="w-38 rounded-xl border-primary-400">
+          <SelectTrigger className="hidden lg:flex w-38 rounded-xl border-primary-400">
             <SelectValue placeholder="Home Type" />
           </SelectTrigger>
           <SelectContent className="bg-white">
@@ -227,27 +250,27 @@ const FiltersBar = () => {
       </div>
 
       {/* View Mode */}
-      <div className="flex justify-between items-center gap-4 p-2">
+      <div className="flex justify-between items-center gap-2 md:gap-4 p-1 md:p-2">
         <div className="flex border rounded-xl">
           <Button
             variant="ghost"
             className={cn(
-              "px-3 py-1 rounded-none rounded-l-xl hover:bg-primary-600 hover:text-primary-50",
+              "px-2 md:px-3 py-1 rounded-none rounded-l-xl hover:bg-primary-600 hover:text-primary-50",
               viewMode === "list" ? "bg-primary-700 text-primary-50" : ""
             )}
             onClick={() => dispatch(setViewMode("list"))}
           >
-            <List className="w-5 h-5" />
+            <List className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
           <Button
             variant="ghost"
             className={cn(
-              "px-3 py-1 rounded-none rounded-r-xl hover:bg-primary-600 hover:text-primary-50",
+              "px-2 md:px-3 py-1 rounded-none rounded-r-xl hover:bg-primary-600 hover:text-primary-50",
               viewMode === "grid" ? "bg-primary-700 text-primary-50" : ""
             )}
             onClick={() => dispatch(setViewMode("grid"))}
           >
-            <Grid className="w-5 h-5" />
+            <Grid className="w-4 h-4 md:w-5 md:h-5" />
           </Button>
         </div>
       </div>

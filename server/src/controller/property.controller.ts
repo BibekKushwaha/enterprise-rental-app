@@ -2,15 +2,28 @@ import type{ Request,Response } from "express";
 
 import { Prisma, PrismaClient } from "@prisma/client";
 import { wktToGeoJSON } from "@terraformer/wkt";
-import { S3Client } from "@aws-sdk/client-s3";
+import { S3Client, type S3ClientConfig } from "@aws-sdk/client-s3";
 import { type Location } from "@prisma/client";
 import { Upload } from "@aws-sdk/lib-storage";
 import axios from "axios";
 
 const prisma = new PrismaClient();
-const s3Client = new S3Client({
+
+// S3 Client Configuration
+// Uses environment variables: AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET_NAME
+const s3Config: S3ClientConfig = {
   region: process.env.AWS_REGION ?? "us-east-1",
-});
+};
+
+// Add credentials if provided via environment variables
+if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  s3Config.credentials = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  };
+}
+
+const s3Client = new S3Client(s3Config);
  
 export const getProperties = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -61,15 +74,25 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
 
     if (propertyType && propertyType !== "any") {
       whereConditions.push(
-        Prisma.sql`p."propertyType" = ${propertyType}::"propertyType"`
+        Prisma.sql`p."propertyType" = ${propertyType}::"PropertyType"`
       );
     }
 
     if (amenities && amenities !== "any") {
-      const arr = (amenities as string).split(",");
-      whereConditions.push(
-        Prisma.sql`p.amenities @> ARRAY[${Prisma.join(arr)}]::text[]`
-      );
+      const arr = (amenities as string).split(",").filter(Boolean);
+      // Valid amenity enum values
+      const validAmenities = [
+        "WasherDryer", "AirConditioning", "Dishwasher", "HighSpeedInternet",
+        "HardwoodFloors", "WalkInClosets", "Microwave", "Refrigerator",
+        "Pool", "Gym", "Parking", "PetsAllowed", "WiFi"
+      ];
+      // Filter to only valid amenity values
+      const validArr = arr.filter(a => validAmenities.includes(a));
+      if (validArr.length > 0) {
+        whereConditions.push(
+          Prisma.sql`p.amenities @> ARRAY[${Prisma.join(validArr)}]::"Amenity"[]`
+        );
+      }
     }
 
     if (availableFrom && availableFrom !== "any") {
@@ -80,7 +103,7 @@ export const getProperties = async (req: Request, res: Response): Promise<void> 
           NOT EXISTS (
             SELECT 1 FROM "Lease" l2
             WHERE l2."propertyId" = p.id 
-            AND l2."startDate" > ${date.toISOString()}
+            AND l2."startDate" > ${date}::timestamp
           )`
         );
       }
@@ -196,25 +219,35 @@ export const createProperty = async (
       ...propertyData
     } = req.body;
 
-    // const photoUrls = await Promise.all(
-    //   files.map(async (file) => {
-    //     const uploadParams = {
-    //       Bucket: process.env.S3_BUCKET_NAME!,
-    //       Key: `properties/${Date.now()}-${file.originalname}`,
-    //       Body: file.buffer,
-    //       ContentType: file.mimetype,
-    //     };
+    // Handle file uploads to S3
+    let photoUrls: string[] = [];
+    
+    if (files && files.length > 0) {
+      photoUrls = await Promise.all(
+        files.map(async (file) => {
+          const uploadParams = {
+            Bucket: process.env.S3_BUCKET_NAME!,
+            Key: `properties/${Date.now()}-${file.originalname}`,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          };
 
-    //     const uploadResult = await new Upload({
-    //       client: s3Client,
-    //       params: uploadParams,
-    //     }).done();
+          const uploadResult = await new Upload({
+            client: s3Client,
+            params: uploadParams,
+          }).done();
 
-    //     return uploadResult.Location;
-    //   })
-    // );
+          // S3 Upload may return undefined Location in some cases
+          if (!uploadResult.Location) {
+            throw new Error(`Failed to upload file: ${file.originalname}`);
+          }
 
-    // console.log({ address, city, state, country, postalCode });
+          return uploadResult.Location;
+        })
+      );
+    }
+
+    console.log({ address, city, state, country, postalCode });
 
 
     const geocodingUrl = `https://nominatim.openstreetmap.org/search?${new URLSearchParams(
@@ -266,7 +299,7 @@ export const createProperty = async (
     const newProperty = await prisma.property.create({
       data: {
         ...propertyData,
-        // photoUrls,
+        photoUrls,
         locationId: location.id,
         managerCognitoId,
         amenities:

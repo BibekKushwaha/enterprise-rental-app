@@ -2,11 +2,16 @@
 import { useGetAuthUserQuery, useUpdateTenantSettingMutation } from '@/state/api';
 import React from 'react';
 import SettingForm from '@/components/SettingsForm';
+import Loading from '@/components/Loading';
 
 const TenantSettings = () => {
-    const {data:authUser} = useGetAuthUserQuery();
+    const {data:authUser, isLoading} = useGetAuthUserQuery();
     console.log("authUser",authUser);
     const [updateTenant] = useUpdateTenantSettingMutation();
+
+    if(isLoading){
+        return <Loading />;
+    }
 
     const initialData = {
       name: authUser?.userInfo.name,

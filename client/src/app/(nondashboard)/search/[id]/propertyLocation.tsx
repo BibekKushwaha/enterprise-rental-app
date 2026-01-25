@@ -1,3 +1,4 @@
+import Loading from "@/components/Loading";
 import { useGetPropertyQuery } from "@/state/api";
 import { Compass, MapPin } from "lucide-react";
 import mapboxgl from "mapbox-gl";
@@ -6,19 +7,26 @@ import React, { useEffect, useRef } from "react";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
 
-const PropertyLocation = ({ propertyId }: PropertyDetailsProps) => {
+const PropertyLocation = ({ propertyId }: PropertyLocationProps) => {
   const {
     data: property,
     isError,
     isLoading,
   } = useGetPropertyQuery(propertyId);
-  const mapContainerRef = useRef(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
 
   useEffect(() => {
-    if (isLoading || isError || !property) return;
+    if (isLoading || isError || !property || !mapContainerRef.current) return;
 
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current!,
+    // Cleanup previous map instance
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
+
+    mapRef.current = new mapboxgl.Map({
+      container: mapContainerRef.current,
       style: "mapbox://styles/mbibek/cmgjor100001q01s60xz925g9",
       center: [
         property.location.coordinates.longitude,
@@ -32,16 +40,21 @@ const PropertyLocation = ({ propertyId }: PropertyDetailsProps) => {
         property.location.coordinates.longitude,
         property.location.coordinates.latitude,
       ])
-      .addTo(map);
+      .addTo(mapRef.current);
 
     const markerElement = marker.getElement();
     const path = markerElement.querySelector("path[fill='#3FB1CE']");
     if (path) path.setAttribute("fill", "#000000");
 
-    return () => map.remove();
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
   }, [property, isError, isLoading]);
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoading) return <Loading />;
   if (isError || !property) {
     return <>Property not Found</>;
   }

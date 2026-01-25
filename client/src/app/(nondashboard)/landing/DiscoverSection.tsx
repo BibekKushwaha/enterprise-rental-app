@@ -30,7 +30,7 @@ const DiscoverSection = () => {
         <div className='max-w-6xl xl:max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 xl:px-16'>
             <motion.div
             variants={itemVariants}
-            className='my-12 text-center'>
+            className='mb-12 mt-4 text-center'>
                 <h2 className='text-3xl font-semibold leading-tight text-gray-800'>Discover</h2>
                 <p className='mt-4 text-lg text-gray-600'>Find your dream rental property today!</p>
                 <p className='mt-2 text-gray-500 max-w-3xl mx-auto'>

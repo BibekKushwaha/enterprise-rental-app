@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { MultiSelectDropdown } from "@/components/MultiSelectDropdown";
 import { Edit, X, Plus } from "lucide-react";
 import { registerPlugin } from "filepond";
 import { FilePond } from "react-filepond";
@@ -43,6 +44,7 @@ interface FormFieldProps {
     | "textarea"
     | "number"
     | "select"
+    | "multiselect"
     | "switch"
     | "password"
     | "file"
@@ -95,7 +97,7 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
             <SelectTrigger className={`w-full border-gray-200 p-4 ${inputClassName}`}>
               <SelectValue placeholder={placeholder} />
             </SelectTrigger>
-            <SelectContent className="w-full border-gray-200 shadow">
+            <SelectContent className="w-full border-gray-200 shadow bg-white">
               {options?.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -103,6 +105,17 @@ export const CustomFormField: React.FC<FormFieldProps> = ({
               ))}
             </SelectContent>
           </Select>
+        );
+
+      case "multiselect":
+        return (
+          <MultiSelectDropdown
+            options={options || []}
+            value={Array.isArray(field.value) ? field.value : field.value ? [field.value] : []}
+            onChange={(values) => field.onChange(values)}
+            placeholder={placeholder || "Select options..."}
+            className={inputClassName}
+          />
         );
 
       case "switch":

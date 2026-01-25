@@ -8,7 +8,7 @@ import { CircleCheckBig, Download, File, Hospital } from 'lucide-react';
 import Link from 'next/link';
 import React, { useState } from 'react'
 
-const page = () => {
+const Applications = () => {
 
     const { data: authUser } = useGetAuthUserQuery();
   const [activeTab, setActiveTab] = useState("all");
@@ -82,7 +82,7 @@ const page = () => {
                       }`}
                     >
                       <div className="flex flex-wrap items-center">
-                        <File className="w-5 h-5 mr-2 flex-shrink-0" />
+                        <File className="w-5 h-5 mr-2 shrink-0" />
                         <span className="mr-2">
                           Application submitted on{" "}
                           {new Date(
@@ -90,7 +90,7 @@ const page = () => {
                           ).toLocaleDateString()}
                           .
                         </span>
-                        <CircleCheckBig className="w-5 h-5 mr-2 flex-shrink-0" />
+                        <CircleCheckBig className="w-5 h-5 mr-2 shrink-0" />
                         <span
                           className={`font-semibold ${
                             application.status === "Approved"
@@ -169,4 +169,4 @@ const page = () => {
   );
 }
 
-export default page
+export default Applications

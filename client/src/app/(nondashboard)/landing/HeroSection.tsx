@@ -53,7 +53,7 @@ const HeroSection = () => {
         initial= {{opacity:0, y:20}}
         animate = {{opacity:1, y:1}}
         transition={{duration:0.8}}
-        className='absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full'
+        className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full'
         >
             <div className=' mx-auto px-16 sm:px-12'>
                 <h1 className='text-5xl font-bold text-white mb-4'>

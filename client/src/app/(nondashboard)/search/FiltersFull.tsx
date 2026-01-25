@@ -1,12 +1,12 @@
-import { FiltersState, initialState, setFilters } from "@/state";
+import { FiltersState, initialState, setFilters, toggleFiltersFullOpen } from "@/state";
 import { useAppSelector } from "@/state/redux";
 import { usePathname, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { debounce } from "lodash";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { AmenityIcons, PropertyTypeIcons } from "@/lib/constants";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -25,12 +25,30 @@ const FiltersFull = () => {
   const router = useRouter();
   const pathname = usePathname();
   const filters = useAppSelector((state) => state.global.filters);
-  const [localFilters, setLocalFilters] = useState(initialState.filters);
   const isFiltersFullOpen = useAppSelector(
     (state) => state.global.isFiltersFullOpen
   );
+  const [localFilters, setLocalFilters] = useState(filters);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const updateURL = debounce((newFilters: FiltersState) => {
+  // Use refs for router and pathname to avoid recreating debounce
+  const routerRef = useRef(router);
+  const pathnameRef = useRef(pathname);
+  
+  useEffect(() => {
+    routerRef.current = router;
+    pathnameRef.current = pathname;
+  }, [router, pathname]);
+
+  // Sync localFilters with redux filters when panel opens or when filters change externally
+  useEffect(() => {
+    if (isFiltersFullOpen && !isProcessing) {
+      setLocalFilters(filters);
+    }
+  }, [isFiltersFullOpen, filters, isProcessing]);
+
+  // Stable debounced function using useMemo
+  const updateURL = useMemo(() => debounce((newFilters: FiltersState) => {
     const cleanFilters = cleanParams(newFilters);
     const updatedSearchParams = new URLSearchParams();
 
@@ -41,18 +59,39 @@ const FiltersFull = () => {
       );
     });
 
-    router.push(`${pathname}?${updatedSearchParams.toString()}`);
-  });
+    routerRef.current.push(`${pathnameRef.current}?${updatedSearchParams.toString()}`);
+  }, 300), []);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      updateURL.cancel();
+    };
+  }, [updateURL]);
 
   const handleSubmit = () => {
+    setIsProcessing(true);
     dispatch(setFilters(localFilters));
     updateURL(localFilters);
+    // Close filters panel on mobile after apply
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      dispatch(toggleFiltersFullOpen());
+    }
+    // Reset processing flag after a short delay
+    setTimeout(() => setIsProcessing(false), 100);
   };
 
   const handleReset = () => {
+    setIsProcessing(true);
     setLocalFilters(initialState.filters);
     dispatch(setFilters(initialState.filters));
     updateURL(initialState.filters);
+    // Close filters panel on mobile after reset
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      dispatch(toggleFiltersFullOpen());
+    }
+    // Reset processing flag after a short delay
+    setTimeout(() => setIsProcessing(false), 100);
   };
 
   const handleAmenityChange = (amenity: AmenityEnum) => {
@@ -90,6 +129,18 @@ const FiltersFull = () => {
 
   return (
     <div className="bg-white rounded-lg px-4 h-full overflow-auto pb-10">
+      {/* Mobile Close Button */}
+      <div className="lg:hidden flex justify-between items-center py-4 border-b mb-4">
+        <h3 className="text-lg font-bold">Filters</h3>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => dispatch(toggleFiltersFullOpen())}
+        >
+          <X className="w-5 h-5" />
+        </Button>
+      </div>
+      
       <div className="flex flex-col space-y-6">
         {/* Location */}
         <div>
@@ -97,7 +148,7 @@ const FiltersFull = () => {
           <div className="flex items-center">
             <Input
               placeholder="Enter location"
-              value={filters.location}
+              value={localFilters.location}
               onChange={(e) =>
                 setLocalFilters((prev) => ({
                   ...prev,
@@ -108,7 +159,7 @@ const FiltersFull = () => {
             />
             <Button
               onClick={handleLocationSearch}
-              className="rounded-r-xl rounded-l-none border-l-none border-black shadow-none border hover:bg-primary-700 hover:text-primary-50"
+              className="rounded-r-xl rounded-l-none border-l-0 border-black shadow-none border hover:bg-primary-700 hover:text-primary-50"
             >
               <Search className="w-4 h-4" />
             </Button>
@@ -122,12 +173,11 @@ const FiltersFull = () => {
             {Object.entries(PropertyTypeIcons).map(([type, Icon]) => (
               <div
                 key={type}
-                className={cn(
-                  "flex flex-col items-center justify-center p-4 border rounded-xl cursor-pointer",
-                  localFilters.propertyType === type
-                    ? "border-black"
-                    : "border-gray-200"
-                )}
+                className="flex flex-col items-center justify-center p-4 rounded-xl cursor-pointer transition-colors"
+                style={{
+                  border: `2px solid ${localFilters.propertyType === type ? '#000000' : '#e5e7eb'}`,
+                  backgroundColor: localFilters.propertyType === type ? '#f9fafb' : 'transparent'
+                }}
                 onClick={() =>
                   setLocalFilters((prev) => ({
                     ...prev,
@@ -179,7 +229,7 @@ const FiltersFull = () => {
               <SelectTrigger className="w-full rounded-xl">
                 <SelectValue placeholder="Beds" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 <SelectItem value="any">Any beds</SelectItem>
                 <SelectItem value="1">1+ bed</SelectItem>
                 <SelectItem value="2">2+ beds</SelectItem>
@@ -199,7 +249,7 @@ const FiltersFull = () => {
               <SelectTrigger className="w-full rounded-xl">
                 <SelectValue placeholder="Baths" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-white">
                 <SelectItem value="any">Any baths</SelectItem>
                 <SelectItem value="1">1+ bath</SelectItem>
                 <SelectItem value="2">2+ baths</SelectItem>
@@ -226,7 +276,6 @@ const FiltersFull = () => {
                 squareFeet: value as [number, number],
               }))
             }
-            className="[&>.bar]:bg-primary-700"
           />
           <div className="flex justify-between mt-2">
             <span>{localFilters.squareFeet[0] ?? 0} sq ft</span>
@@ -241,16 +290,14 @@ const FiltersFull = () => {
             {Object.entries(AmenityIcons).map(([amenity, Icon]) => (
               <div
                 key={amenity}
-                className={cn(
-                  "flex items-center space-x-2 p-2 border rounded-lg hover:cursor-pointer",
-                  localFilters.amenities.includes(amenity as AmenityEnum)
-                    ? "border-black"
-                    : "border-gray-200"
-                )}
+                className="flex items-center space-x-2 p-2 rounded-lg cursor-pointer transition-colors"
+                style={{
+                  border: `1px solid ${localFilters.amenities.includes(amenity as AmenityEnum) ? '#000000' : '#e5e7eb'}`
+                }}
                 onClick={() => handleAmenityChange(amenity as AmenityEnum)}
               >
-                <Icon className="w-5 h-5 hover:cursor-pointer" />
-                <Label className="hover:cursor-pointer">
+                <Icon className="w-5 h-5" />
+                <Label className="cursor-pointer">
                   {formatEnumString(amenity)}
                 </Label>
               </div>

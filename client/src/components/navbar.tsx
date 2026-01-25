@@ -13,7 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { SidebarTrigger } from './ui/sidebar'
 
 const Navbar= () => {
-    const {data: authUser} = useGetAuthUserQuery();
+    const {data: authUser, isLoading: isAuthLoading} = useGetAuthUserQuery();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -35,12 +35,12 @@ const Navbar= () => {
                         </div>
                     )
                 }
-                <Link href='/' className='cursor-pointer hover:!text-primary-300' scroll={false}>
+                <Link href='/' className='cursor-pointer hover:text-primary-300!' scroll={false}>
                 <div className='flex items-center gap-3'>
                     <Image src="/logo.svg" alt='rentiful logo' width={24} height={24} className='w-6 h-6'/>
                     <div className='text-xl text-bold'>
                     RENT
-                    <span className='text-secondary-500 font-light hover:!text-primary-300'>IFUL</span>
+                    <span className='text-secondary-500 font-light hover:text-primary-300!'>IFUL</span>
                     </div>
                 </div>
                 </Link>
@@ -76,7 +76,9 @@ const Navbar= () => {
             }
             <div className='flex items-center gap-5'>
                {
-                authUser ? (
+                isAuthLoading ? (
+                    <div className="w-10 h-10 rounded-full bg-primary-600 animate-pulse" />
+                ) : authUser ? (
                     <>
                     <div className="relative hidden md:block">
                         <MessageCircle className='h- w-4 cursor-ponter text-primary-200 hover:text-primary-400'/>
@@ -100,7 +102,7 @@ const Navbar= () => {
 
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className='bg-white text-primary-700'>
-                        <DropdownMenuItem className='cursor-pointer hover:!bg-primary-700 hover:!text-primary-100 text-bold'
+                        <DropdownMenuItem className='cursor-pointer hover:bg-primary-700! hover:text-primary-100! text-bold'
                         onClick={()=>router.push(authUser.userRole?.toLocaleLowerCase() === "manager"
                         ? "/managers/properties"
                         : "/tenants/favorites",

@@ -1,5 +1,6 @@
 import Card from '@/components/Card';
 import CardCompact from '@/components/CardCompact';
+import Loading from '@/components/Loading';
 import { useAddFavoritePropertyMutation, useGetAuthUserQuery, useGetPropertiesQuery, useGetTenantQuery, useRemoveFavoritePropertyMutation } from '@/state/api';
 import { useAppSelector } from '@/state/redux';
 import { Property } from '@/types/prismaType';
@@ -43,7 +44,7 @@ const Listings = () => {
     }
   };
 
-    if (isLoading) return <>Loading...</>;
+    if (isLoading) return <Loading />;
     if (isError || !properties) return <div>Failed to fetch properties</div>;
     
   return (

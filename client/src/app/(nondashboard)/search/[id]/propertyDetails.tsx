@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Loading from "@/components/Loading";
 import { AmenityIcons, HighlightIcons } from "@/lib/constants";
 import { formatEnumString } from "@/lib/create-new-user";
 import { useGetPropertyQuery } from "@/state/api";
@@ -12,7 +13,7 @@ const PropertyDetails = ({ propertyId }: PropertyDetailsProps) => {
     isLoading,
   } = useGetPropertyQuery(propertyId);
 
-  if (isLoading) return <>Loading...</>;
+  if (isLoading) return <Loading />;
   if (isError || !property) {
     return <>Property not Found</>;
   }
@@ -28,7 +29,8 @@ const PropertyDetails = ({ propertyId }: PropertyDetailsProps) => {
             return (
               <div
                 key={amenity}
-                className="flex flex-col items-center border rounded-xl py-8 px-4"
+                className="flex flex-col items-center rounded-xl py-8 px-4"
+                style={{ border: '1px solid #000000' }}
               >
                 <Icon className="w-8 h-8 mb-2 text-gray-700" />
                 <span className="text-sm text-center text-gray-700">
@@ -52,7 +54,8 @@ const PropertyDetails = ({ propertyId }: PropertyDetailsProps) => {
             return (
               <div
                 key={highlight}
-                className="flex flex-col items-center border rounded-xl py-8 px-4"
+                className="flex flex-col items-center rounded-xl py-8 px-4"
+                style={{ border: '1px solid #000000' }}
               >
                 <Icon className="w-8 h-8 mb-2 text-primary-600 dark:text-primary-300" />
                 <span className="text-sm text-center text-primary-600 dark:text-primary-300">
