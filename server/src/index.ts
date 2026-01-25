@@ -4,12 +4,12 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import helmet  from "helmet";
 import morgan from "morgan";
-import { authMiddleware } from "./middleware/auth.middleware.ts";
-import tenantRoutes from "./routes/routes.tenant.ts";
-import managerRoutes from "./routes/routes.manager.ts";
-import propertyRoutes from "./routes/routes.property.ts";
-import leaseRoutes from "./routes/routes.lease.ts";
-import applicationRoutes from "./routes/routes.application.ts";
+import { authMiddleware } from "./middleware/auth.middleware.js";
+import tenantRoutes from "./routes/routes.tenant.js";
+import managerRoutes from "./routes/routes.manager.js";
+import propertyRoutes from "./routes/routes.property.js";
+import leaseRoutes from "./routes/routes.lease.js";
+import applicationRoutes from "./routes/routes.application.js";
 
 
 

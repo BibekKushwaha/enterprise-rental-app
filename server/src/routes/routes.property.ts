@@ -1,6 +1,6 @@
 import express from "express";
-import {getProperties,getProperty,createProperty, getPropertyLeases} from "../controller/property.controller.ts";
-import { authMiddleware } from "../middleware/auth.middleware.ts";
+import {getProperties,getProperty,createProperty, getPropertyLeases} from "../controller/property.controller.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 import multer from "multer";
 
 const router = express.Router();
