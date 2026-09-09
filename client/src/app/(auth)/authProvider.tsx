@@ -12,6 +12,7 @@ import {
 } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { useRouter, usePathname } from "next/navigation";
+import Loading from "@/components/Loading";
 
 // https://docs.amplify.aws/gen1/javascript/tools/libraries/configure-categories/
 Amplify.configure({
@@ -154,9 +155,14 @@ const Auth = ({ children }: { children: React.ReactNode }) => {
   // Redirect authenticated users away from auth pages
   useEffect(() => {
     if (user && isAuthPage) {
-      router.push("/");
+      router.replace("/");
     }
   }, [user, isAuthPage, router]);
+
+  // If authenticated user is on an auth page, render loading while redirecting
+  if (user && isAuthPage) {
+    return <Loading />;
+  }
 
   // Allow access to public pages without authentication
   if (!isAuthPage && !isDashboardPage) {
@@ -170,7 +176,7 @@ const Auth = ({ children }: { children: React.ReactNode }) => {
         components={components}
         formFields={formFields}
       >
-        {() => <>{children}</>}
+        {() => (isAuthPage ? <Loading /> : <>{children}</>)}
       </Authenticator>
     </div>
   );

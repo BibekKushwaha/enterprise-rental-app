@@ -31,12 +31,12 @@ const Map = () => {
       mapRef.current = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: "mapbox://styles/mbibek/cmgjor100001q01s60xz925g9",
-        center: filters.coordinates || [-74.5, 40],
+        center: filters.coordinates || [77.209, 28.6139],
         zoom: 9,
       });
     } else {
       // Update center if map already exists
-      mapRef.current.setCenter(filters.coordinates || [-74.5, 40]);
+      mapRef.current.setCenter(filters.coordinates || [77.209, 28.6139]);
     }
 
     // Clear existing property markers
