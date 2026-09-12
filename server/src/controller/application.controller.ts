@@ -1,5 +1,9 @@
 import type{ Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
+import {
+  sendApplicationReceivedEmail,
+  sendApplicationStatusEmail,
+} from "../services/email.service.js";
 
 const prisma = new PrismaClient();
 
@@ -157,6 +161,36 @@ export const createApplication = async (
       return application;
     });
 
+    // --- Notifications (non-fatal) ---
+    try {
+      // Fetch manager details for the property
+      const propertyWithManager = await prisma.property.findUnique({
+        where: { id: propertyId },
+        include: { manager: true },
+      });
+
+      if (propertyWithManager?.manager) {
+        const { manager } = propertyWithManager;
+        const propertyName = propertyWithManager.name;
+
+        // Send email to manager
+        await sendApplicationReceivedEmail(manager.email, name, propertyName);
+
+        // Create in-app notification for manager
+        await prisma.notification.create({
+          data: {
+            userId: manager.cognitoId,
+            userType: "manager",
+            title: "New Application Received",
+            message: `${name} has applied for "${propertyName}"`,
+            link: "/managers/applications",
+          },
+        });
+      }
+    } catch (notifError: any) {
+      console.error("Notification error (createApplication):", notifError.message);
+    }
+
     res.status(201).json(newApplication);
   } catch (error: any) {
     res
@@ -238,6 +272,37 @@ export const updateApplicationStatus = async (
         lease: true,
       },
     });
+
+    // --- Notifications (non-fatal) ---
+    try {
+      if (updatedApplication?.tenant && updatedApplication?.property) {
+        const { tenant, property } = updatedApplication;
+
+        // Send email to tenant
+        await sendApplicationStatusEmail(tenant.email, status, property.name);
+
+        // Determine notification message
+        const statusMsg =
+          status === "Approved"
+            ? `Your application for "${property.name}" has been approved!`
+            : status === "Denied"
+            ? `Your application for "${property.name}" has been denied.`
+            : `Your application for "${property.name}" status changed to ${status}.`;
+
+        // Create in-app notification for tenant
+        await prisma.notification.create({
+          data: {
+            userId: tenant.cognitoId,
+            userType: "tenant",
+            title: `Application ${status}`,
+            message: statusMsg,
+            link: "/tenants/applications",
+          },
+        });
+      }
+    } catch (notifError: any) {
+      console.error("Notification error (updateApplicationStatus):", notifError.message);
+    }
 
     res.json(updatedApplication);
   } catch (error: any) {

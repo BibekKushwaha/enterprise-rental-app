@@ -10,6 +10,7 @@ import managerRoutes from "./routes/routes.manager.js";
 import propertyRoutes from "./routes/routes.property.js";
 import leaseRoutes from "./routes/routes.lease.js";
 import applicationRoutes from "./routes/routes.application.js";
+import notificationRoutes from "./routes/routes.notification.js";
 
 
 
@@ -35,6 +36,7 @@ app.use("/tenants", authMiddleware(["tenant"]),tenantRoutes);
 app.use("/managers", authMiddleware(["manager"]),managerRoutes);
 app.use("/leases",leaseRoutes);
 app.use("/applications",applicationRoutes);
+app.use("/notifications",notificationRoutes);
 
 // Server
 const PORT = Number(process.env.PORT) || 6001;

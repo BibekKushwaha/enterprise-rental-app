@@ -39,7 +39,7 @@ export const api = createApi({
     }
   }),
   reducerPath: "api",
-  tagTypes: ["Tenants","Managers","Properties","PropertyDetails","Leases","Payments","Applications"],
+  tagTypes: ["Tenants","Managers","Properties","PropertyDetails","Leases","Payments","Applications","Notifications"],
   endpoints: (build) => ({
     getAuthUser: build.query<User, void>({
       queryFn: async (_, _queryApi, _extraOptions, fetchWithBQ) => {
@@ -384,6 +384,39 @@ export const api = createApi({
         });
       },
     }),
+
+    // notification related endpoints
+    getNotifications: build.query<
+      AppNotification[],
+      { userId?: string; userType?: string }
+    >({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params.userId) queryParams.append("userId", params.userId);
+        if (params.userType) queryParams.append("userType", params.userType);
+        return `notifications?${queryParams.toString()}`;
+      },
+      providesTags: ["Notifications"],
+    }),
+
+    markNotificationRead: build.mutation<AppNotification, number>({
+      query: (id) => ({
+        url: `notifications/${id}/read`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["Notifications"],
+    }),
+
+    markAllRead: build.mutation<
+      { success: boolean },
+      { userId: string; userType: string }
+    >({
+      query: (params) => ({
+        url: `notifications/read-all?userId=${params.userId}&userType=${params.userType}`,
+        method: "PUT",
+      }),
+      invalidatesTags: ["Notifications"],
+    }),
   }),
 });
 
@@ -406,4 +439,7 @@ export const {
   useGetApplicationsQuery,
   useUpdateApplicationStatusMutation,
   useCreateApplicationMutation,
+  useGetNotificationsQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllReadMutation,
 } = api;

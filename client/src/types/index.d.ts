@@ -129,6 +129,18 @@ declare global {
     userInfo: Tenant | Manager;
     userRole: "manager" | "tenant";
   }
+
+  // In-app notification (mirrors Prisma Notification model)
+  interface AppNotification {
+    id: number;
+    userId: string;
+    userType: string;
+    title: string;
+    message: string;
+    isRead: boolean;
+    link: string | null;
+    createdAt: string;
+  }
 }
 
 export {};
