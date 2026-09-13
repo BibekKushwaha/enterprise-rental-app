@@ -24,7 +24,7 @@ const DashboardLayout = ({children}:{children:React.ReactNode})=>{
                 (userRole === "tenant" && pathname.startsWith("/managers"))
             ){
                 router.push(
-                    userRole === "manager" ? "/managers/properties" : "/tenants/favorites",
+                    userRole === "manager" ? "/managers" : "/tenants/favorites",
                     {scroll:false}
                 )
             }else{
@@ -37,10 +37,10 @@ const DashboardLayout = ({children}:{children:React.ReactNode})=>{
     return (<SidebarProvider>
         <div className="min-h-screen w-full bg-primary-100">
             <Navbar/>
-            <div style={{padding: `${NAVBAR_HEIGHT}px`}}>
-                <main className="flex">
+            <div style={{ paddingTop: `${NAVBAR_HEIGHT}px` }}>
+                <main className="flex min-h-[calc(100vh-52px)]">
                 <AppSidebar userType={authUser.userRole.toLocaleLowerCase()  as "tenant" | "manager"}/>
-                <div className="flex-grow transition-all duration-300">
+                <div className="flex-grow min-w-0 transition-all duration-300">
                 {children}
                 </div>
                 </main>

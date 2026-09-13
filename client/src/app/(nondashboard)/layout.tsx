@@ -15,11 +15,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (authUser) {
       const userRole = authUser.userRole?.toLowerCase();
-      if (
-        (userRole === "manager" && pathname.startsWith("/search")) ||
-        (userRole === "manager" && pathname === "/")
-      ) {
-        router.push("/managers/properties", { scroll: false });
+      if (userRole === "manager" && pathname.startsWith("/search")) {
+        router.push("/managers", { scroll: false });
       }
     }
   }, [authUser, router, pathname]);

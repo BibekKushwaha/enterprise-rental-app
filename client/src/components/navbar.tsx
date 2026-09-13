@@ -27,8 +27,8 @@ const Navbar= () => {
   return (
     <div className='fixed top-0 left-0 w-full z-50 shadow-xl'
     style={{height: `${NAVBAR_HEIGHT}px`}}>
-        <div className='flex justify-between items-center w-full py-3 px-8 bg-primary-700 text-white '>
-            <div className='flex items-center gap-4 md:gap-6'>
+        <div className='flex justify-between items-center w-full py-2.5 px-4 sm:px-6 md:px-8 bg-primary-700 text-white'>
+            <div className='flex items-center gap-2 sm:gap-4 md:gap-6'>
                 {
                     isDashboardPage && (
                         <div className='md:hidden'>
@@ -101,7 +101,7 @@ const Navbar= () => {
                         <DropdownMenuContent className='bg-white text-primary-700'>
                         <DropdownMenuItem className='cursor-pointer hover:bg-primary-700! hover:text-primary-100! text-bold'
                         onClick={()=>router.push(authUser.userRole?.toLocaleLowerCase() === "manager"
-                        ? "/managers/properties"
+                        ? "/managers"
                         : "/tenants/favorites",
                         {scroll: false}
                         )}

@@ -89,6 +89,7 @@ export const getManagerProperties = async (
       where: { managerCognitoId:cognitoId },
       include: {
         location: true,
+        leases: true,
       },
     });
       
